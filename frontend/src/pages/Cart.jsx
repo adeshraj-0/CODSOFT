@@ -1,4 +1,4 @@
-import "../styles/Cart.css";
+import "../styles/cart.css";
 import { Link } from "react-router-dom";
 import {
   FaTrash,
@@ -273,7 +273,7 @@ function Cart({ cartItems, setCartItems }) {
 
         </div>
 
-      </div>
+      </div>B
 
     </section>
   );
