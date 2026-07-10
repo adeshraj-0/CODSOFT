@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Checkout.css";
 
 function Checkout({ cartItems }) {
 
   const navigate = useNavigate();
+
+  const isLoggedIn =
+  localStorage.getItem("isLoggedIn") === "true";
+
+useEffect(() => {
+  if (!isLoggedIn) {
+    alert("Please login to continue checkout.");
+    navigate("/login");
+  }
+}, [isLoggedIn, navigate]);
 
   const [payment, setPayment] = useState("COD");
 
@@ -67,6 +77,11 @@ function Checkout({ cartItems }) {
   };
 
 function placeOrder() {
+  if (!isLoggedIn) {
+  alert("Please login first.");
+  navigate("/login");
+  return;
+}
 
   if (cartItems.length === 0) {
     alert("🛒 Your cart is empty. Please add at least one product.");

@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
@@ -10,29 +10,37 @@ import ProductDetails from "./pages/ProductDetails";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 
 function App() {
-
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+  const savedCart = localStorage.getItem("cartItems");
+  return savedCart ? JSON.parse(savedCart) : [];
+});
   const [search, setSearch] = useState("");
-  
+  useEffect(() => {
+  localStorage.setItem(
+    "cartItems",
+    JSON.stringify(cartItems)
+  );
+}, [cartItems]);
+
   const location = useLocation();
 
   return (
     <>
-    {location.pathname !== "/success" && (
-      <Navbar
-        cartCount={cartItems.length}
-        search={search}
-        setSearch={setSearch}
-      />
-    )}
+      {location.pathname !== "/success" && (
+        <Navbar
+          cartCount={cartItems.length}
+          search={search}
+          setSearch={setSearch}
+        />
+      )}
 
       <Routes>
-
         <Route
           path="/"
           element={
@@ -55,7 +63,6 @@ function App() {
           }
         />
 
-        {/* NEW ROUTE */}
         <Route
           path="/product/:id"
           element={
@@ -67,26 +74,6 @@ function App() {
         />
 
         <Route
-          path="/checkout"
-          element={
-            <Checkout
-              cartItems={cartItems}
-              />
-          }
-        />
-
-        <Route
-        path="/success"
-        element={<OrderSuccess />}
-        />
-
-        <Route path="/about" element={<About />} />
-
-        <Route path="/contact" element={<Contact />} />
-
-        <Route path="/login" element={<Login />} />
-
-        <Route
           path="/cart"
           element={
             <Cart
@@ -96,6 +83,27 @@ function App() {
           }
         />
 
+        <Route
+          path="/checkout"
+          element={
+            <Checkout
+              cartItems={cartItems}
+            />
+          }
+        />
+
+        <Route
+          path="/success"
+          element={<OrderSuccess />}
+        />
+
+        <Route path="/about" element={<About />} />
+
+        <Route path="/contact" element={<Contact />} />
+
+        <Route path="/login" element={<Login />} />
+
+        <Route path="/signup" element={<Signup />} />
       </Routes>
     </>
   );

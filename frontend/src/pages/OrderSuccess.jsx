@@ -1,30 +1,21 @@
 import autoTable from "jspdf-autotable";
 import jsPDF from "jspdf";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import "../styles/OrderSuccess.css";
 
 function OrderSuccess() {
 
   const { state } = useLocation();
+  const isLoggedIn =
+  localStorage.getItem("isLoggedIn") === "true";
 
-  if (!state) {
-    return (
-      <div
-        style={{
-          textAlign: "center",
-          padding: "60px",
-        }}
-      >
-        <h2>No Order Found</h2>
+if (!isLoggedIn) {
+  return <Navigate to="/login" replace />;
+}
 
-        <Link to="/">
-          <button>
-            Continue Shopping
-          </button>
-        </Link>
-      </div>
-    );
-  }
+if (!state) {
+  return <Navigate to="/" replace />;
+}
 
   const orderId =
     "ORD" +
