@@ -1,5 +1,7 @@
+import { useState } from "react";
 import "../styles/cart.css";
 import { Link } from "react-router-dom";
+
 import {
   FaTrash,
   FaPlus,
@@ -10,13 +12,22 @@ import {
   FaTruck,
 } from "react-icons/fa";
 
-function Cart({ cartItems, setCartItems }) {
+function Cart({ cartItems, setCartItems, appliedCoupon, setAppliedCoupon }) {
+  const [coupon, setCoupon] = useState(appliedCoupon || "");
+  const [couponDiscount, setCouponDiscount] =
+    useState(0);
+  const [couponMessage, setCouponMessage] =
+    useState("");
 
   const increaseQuantity = (id) => {
     setCartItems(
       cartItems.map((item) =>
         item.id === id
-          ? { ...item, quantity: item.quantity + 1 }
+          ? {
+              ...item,
+              quantity:
+                (Number(item.quantity) || 1) + 1,
+            }
           : item
       )
     );
@@ -27,73 +38,144 @@ function Cart({ cartItems, setCartItems }) {
       cartItems
         .map((item) =>
           item.id === id
-            ? { ...item, quantity: item.quantity - 1 }
+            ? {
+                ...item,
+                quantity:
+                  (Number(item.quantity) || 1) - 1,
+              }
             : item
         )
-        .filter((item) => item.quantity > 0)
+        .filter(
+          (item) =>
+            (Number(item.quantity) || 0) > 0
+        )
     );
   };
 
   const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
+    setCartItems(
+      cartItems.filter((item) => item.id !== id)
+    );
   };
 
-  const subtotal = cartItems.reduce((total, item) => {
-    const price = Number(item.price.replace(/[₹,]/g, ""));
-    return total + price * item.quantity;
-  }, 0);
+  const getPrice = (item) => {
+    const rawPrice =
+      item.price ??
+      item.discountPrice ??
+      item.finalPrice ??
+      item.productPrice ??
+      0;
 
-  const discount = subtotal > 5000 ? 500 : 0;
-  const shipping = subtotal === 0 ? 0 : 0;
-  const total = subtotal - discount + shipping;
+    const price = Number(
+      String(rawPrice)
+        .replace("₹", "")
+        .replace(/,/g, "")
+        .trim()
+    );
+
+    return Number.isFinite(price) ? price : 0;
+  };
+
+  const subtotal = cartItems.reduce(
+    (total, item) => {
+      const price = getPrice(item);
+
+      const quantity = Math.max(
+        1,
+        Number(item.quantity) || 1
+      );
+
+      return total + price * quantity;
+    },
+    0
+  );
+
+  const discount = Math.min(
+    couponDiscount,
+    subtotal
+  );
+
+  const shipping = 0;
+
+  const total = Math.max(
+    0,
+    subtotal - discount + shipping
+  );
+
+  const applyCoupon = () => {
+    const couponCode = coupon
+      .trim()
+      .toUpperCase();
+
+    if (!couponCode) {
+      setCouponDiscount(0);
+      setCouponMessage(
+        "Please enter a coupon code."
+      );
+
+      return;
+    }
+
+if (couponCode === "ORIGIN10") {
+  const discountAmount = Math.round(
+    subtotal * 0.1
+  );
+
+  setCouponDiscount(discountAmount);
+
+  setAppliedCoupon("ORIGIN10");
+
+  setCouponMessage(
+    "ORIGIN10 applied! You saved 10%."
+  );
+
+  return;
+}
+    setCouponDiscount(0);
+
+    setAppliedCoupon("");
+
+    setCouponMessage(
+      "Invalid coupon code."
+    );
+  };
 
   return (
     <section className="cart-page">
-
       <div className="cart-title">
-
         <h1>Shopping Cart</h1>
 
         <p>
-          Review your selected products before checkout.
+          Review your selected products before
+          checkout.
         </p>
-
       </div>
 
       <div className="cart-wrapper">
-
         {/* LEFT */}
 
         <div className="cart-products">
-
           {cartItems.length === 0 ? (
-
             <div className="empty-cart">
-
               <h2>Your Cart is Empty</h2>
 
               <p>
-                Add some amazing products to continue shopping.
+                Add some amazing products to
+                continue shopping.
               </p>
-
             </div>
-
           ) : (
-
             cartItems.map((item) => (
-
               <div
                 className="cart-card"
                 key={item.id}
               >
-
                 <img
                   src={item.image}
                   alt={item.name}
                 />
 
                 <div className="cart-content">
-
                   <h2>{item.name}</h2>
 
                   <p className="cart-price">
@@ -101,7 +183,6 @@ function Cart({ cartItems, setCartItems }) {
                   </p>
 
                   <div className="product-meta">
-
                     <span className="rating">
                       <FaStar />
                       4.8
@@ -110,20 +191,17 @@ function Cart({ cartItems, setCartItems }) {
                     <span className="stock">
                       In Stock
                     </span>
-
                   </div>
 
                   <p className="delivery">
-
                     <FaTruck />
 
                     Delivery in 2–4 Days
-
                   </p>
 
                   <div className="quantity-control">
-
                     <button
+                      type="button"
                       onClick={() =>
                         decreaseQuantity(item.id)
                       }
@@ -132,34 +210,33 @@ function Cart({ cartItems, setCartItems }) {
                     </button>
 
                     <span>
-                      {item.quantity}
+                      {Number(item.quantity) || 1}
                     </span>
 
                     <button
+                      type="button"
                       onClick={() =>
                         increaseQuantity(item.id)
                       }
                     >
                       <FaPlus />
                     </button>
-
                   </div>
 
                   <div className="cart-actions">
-
-                    <button className="wishlist-btn">
-
+                    <button
+                      type="button"
+                      className="wishlist-btn"
+                    >
                       <FaHeart />
 
                       Save for Later
-
                     </button>
-
                   </div>
-
                 </div>
 
                 <button
+                  type="button"
                   className="delete-btn"
                   onClick={() =>
                     removeItem(item.id)
@@ -167,40 +244,42 @@ function Cart({ cartItems, setCartItems }) {
                 >
                   <FaTrash />
                 </button>
-
               </div>
-
             ))
-
           )}
-
         </div>
 
-                {/* RIGHT */}
+        {/* RIGHT */}
 
         <div className="order-summary">
-
           <h2>Order Summary</h2>
 
           <div className="summary-line">
             <span>Items</span>
+
             <span>{cartItems.length}</span>
           </div>
 
           <div className="summary-line">
             <span>Subtotal</span>
-            <span>₹{subtotal.toLocaleString()}</span>
+
+            <span>
+              ₹{subtotal.toLocaleString("en-IN")}
+            </span>
           </div>
 
           <div className="summary-line">
             <span>Discount</span>
+
             <span className="green">
-              - ₹{discount}
+              - ₹
+              {discount.toLocaleString("en-IN")}
             </span>
           </div>
 
           <div className="summary-line">
             <span>Shipping</span>
+
             <span className="green">
               FREE
             </span>
@@ -209,56 +288,68 @@ function Cart({ cartItems, setCartItems }) {
           <hr />
 
           <div className="summary-total">
-
             <span>Total</span>
 
             <span>
-              ₹{total.toLocaleString()}
+              ₹{total.toLocaleString("en-IN")}
             </span>
-
           </div>
 
           <div className="coupon-box">
-
             <input
               type="text"
               placeholder="Enter Coupon Code"
+              value={coupon}
+              onChange={(e) => {
+                setCoupon(e.target.value);
+
+                if (couponDiscount > 0) {
+                  setCouponDiscount(0);
+                  setCouponMessage("");
+                }
+              }}
             />
 
-            <button>
+            <button
+              type="button"
+              onClick={applyCoupon}
+            >
               Apply
             </button>
-
           </div>
 
-          <Link to="/checkout">
+          {couponMessage && (
+            <p className="coupon-message">
+              {couponMessage}
+            </p>
+          )}
 
-  <button className="checkout-btn">
+          {cartItems.length > 0 && (
+            <Link to="/checkout">
+              <button className="checkout-btn">
+                <FaLock />
 
-    <FaLock />
-
-    <span>Proceed To Checkout</span>
-
-  </button>
-
-</Link>
+                <span>
+                  Proceed To Checkout
+                </span>
+              </button>
+            </Link>
+          )}
 
           <div className="secure-payment">
-
             <h4>Secure Payment</h4>
 
             <p>🔒 SSL Encrypted Checkout</p>
 
-            <p>💳 Visa • Mastercard • UPI</p>
-
+            <p>
+              💳 Visa • Mastercard • UPI
+            </p>
           </div>
 
           <div className="payment-methods">
-
             <h4>Accepted Payments</h4>
 
             <div className="payment-icons">
-
               <span>💳 Visa</span>
 
               <span>💳 Mastercard</span>
@@ -266,15 +357,10 @@ function Cart({ cartItems, setCartItems }) {
               <span>📱 UPI</span>
 
               <span>💰 PayPal</span>
-
             </div>
-
           </div>
-
         </div>
-
-      </div>B
-
+      </div>
     </section>
   );
 }

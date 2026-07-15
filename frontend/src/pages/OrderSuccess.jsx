@@ -1,11 +1,21 @@
 import autoTable from "jspdf-autotable";
 import jsPDF from "jspdf";
-import { Link, useLocation, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+
+import {
+  Link,
+  useLocation,
+} from "react-router-dom";
 import "../styles/OrderSuccess.css";
 
-function OrderSuccess() {
+function OrderSuccess({ user, setCartItems }) {
 
   const { state } = useLocation();
+  useEffect(() => {
+  setCartItems([]);
+
+  localStorage.removeItem("cartItems");
+}, [setCartItems]);
   const isLoggedIn =
   localStorage.getItem("isLoggedIn") === "true";
 
@@ -17,13 +27,11 @@ if (!state) {
   return <Navigate to="/" replace />;
 }
 
-  const orderId =
-    "ORD" +
-    Math.floor(Math.random() * 1000000);
+const orderId =
+  state.orderId || "ORD-NOT-AVAILABLE";
 
-  const invoiceNo =
-    "INV" +
-    Math.floor(Math.random() * 1000000);
+const invoiceNo =
+  state.invoiceNo || "INV-NOT-AVAILABLE";
 
   const delivery = new Date();
 
@@ -95,16 +103,18 @@ if (!state) {
         "en-IN"
       );
 
-    const formatDate = (date) =>
-      new Date(date).toLocaleDateString(
-        "en-IN",
-        {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }
-      );
-
+const formatDate = (date) =>
+  new Date(date).toLocaleString(
+    "en-IN",
+    {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }
+  );
     function numberToWords(num) {
 
       if (num === 0)

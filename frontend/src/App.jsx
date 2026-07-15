@@ -1,6 +1,12 @@
-import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "./firebase/firebase";
 
 import Navbar from "./components/Navbar";
 
@@ -14,21 +20,55 @@ import Signup from "./pages/Signup";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
+import MyOrders from "./pages/MyOrders";
+import Profile from "./pages/Profile";
 
 function App() {
   const [cartItems, setCartItems] = useState(() => {
-  const savedCart = localStorage.getItem("cartItems");
-  return savedCart ? JSON.parse(savedCart) : [];
-});
+    const savedCart = localStorage.getItem("cartItems");
+
+    return savedCart
+      ? JSON.parse(savedCart)
+      : [];
+  });
+
   const [search, setSearch] = useState("");
-  useEffect(() => {
-  localStorage.setItem(
-    "cartItems",
-    JSON.stringify(cartItems)
-  );
-}, [cartItems]);
+
+  const [user, setUser] = useState(null);
+
+  const [authLoading, setAuthLoading] = useState(true);
+
+  const [appliedCoupon, setAppliedCoupon] =
+    useState("");
 
   const location = useLocation();
+
+  useEffect(() => {
+    localStorage.setItem(
+      "cartItems",
+      JSON.stringify(cartItems)
+    );
+  }, [cartItems]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (firebaseUser) => {
+        setUser(firebaseUser);
+        setAuthLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  if (authLoading) {
+    return (
+      <div className="auth-loading">
+        <h2>Loading Origin Store...</h2>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -37,6 +77,7 @@ function App() {
           cartCount={cartItems.length}
           search={search}
           setSearch={setSearch}
+          user={user}
         />
       )}
 
@@ -79,31 +120,67 @@ function App() {
             <Cart
               cartItems={cartItems}
               setCartItems={setCartItems}
+              appliedCoupon={appliedCoupon}
+              setAppliedCoupon={setAppliedCoupon}
             />
           }
         />
 
+<Route
+  path="/checkout"
+  element={
+    <Checkout
+      cartItems={cartItems}
+      setCartItems={setCartItems}
+      user={user}
+      appliedCoupon={appliedCoupon}
+    />
+  }
+/>
+
+<Route
+  path="/success"
+  element={
+    <OrderSuccess
+      user={user}
+      setCartItems={setCartItems}
+    />
+  }
+/>
+
         <Route
-          path="/checkout"
+          path="/orders"
           element={
-            <Checkout
-              cartItems={cartItems}
-            />
-          }
+          <MyOrders user={user} />
+        }
         />
 
         <Route
-          path="/success"
-          element={<OrderSuccess />}
+  path="/profile"
+  element={
+    <Profile user={user} />
+  }
+/>
+
+        <Route
+          path="/about"
+          element={<About />}
         />
 
-        <Route path="/about" element={<About />} />
+        <Route
+          path="/contact"
+          element={<Contact />}
+        />
 
-        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-        <Route path="/login" element={<Login />} />
-
-        <Route path="/signup" element={<Signup />} />
+        <Route
+          path="/signup"
+          element={<Signup />}
+        />
       </Routes>
     </>
   );

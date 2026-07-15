@@ -1,34 +1,90 @@
-import { FaStore, FaUser } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  FaStore,
+  FaUser,
+  FaChevronDown,
+  FaAddressCard,
+  FaBoxOpen,
+} from "react-icons/fa";
+
+import {
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+import { signOut } from "firebase/auth";
+
+import { auth } from "../firebase/firebase";
 
 function Navbar({
   cartCount,
   search,
   setSearch,
+  user,
 }) {
   const navigate = useNavigate();
 
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const [isProfileOpen, setIsProfileOpen] =
+    useState(false);
+
+  const profileRef = useRef(null);
 
   const userName =
-    localStorage.getItem("userName") || "User";
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "User";
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userName");
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
+        setIsProfileOpen(false);
+      }
+    };
 
-    alert("Logged Out Successfully!");
+    document.addEventListener(
+      "mousedown",
+      handleOutsideClick
+    );
 
-    navigate("/login");
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleOutsideClick
+      );
+    };
+  }, []);
 
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      setIsProfileOpen(false);
+
+      await signOut(auth);
+
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
+
+      alert("Logged Out Successfully!");
+
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout Error:", error);
+
+      alert(
+        "Unable to logout. Please try again."
+      );
+    }
   };
 
   return (
     <nav className="navbar">
       <div className="logo">
         <FaStore className="logo-icon" />
+
         <span>Origin Store</span>
       </div>
 
@@ -37,7 +93,9 @@ function Navbar({
         className="search-box"
         placeholder="🔍 Search Products..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
       />
 
       <ul className="nav-links">
@@ -46,7 +104,9 @@ function Navbar({
         </li>
 
         <li>
-          <Link to="/products">Products</Link>
+          <Link to="/products">
+            Products
+          </Link>
         </li>
 
         <li>
@@ -54,7 +114,9 @@ function Navbar({
         </li>
 
         <li>
-          <Link to="/contact">Contact</Link>
+          <Link to="/contact">
+            Contact
+          </Link>
         </li>
       </ul>
 
@@ -65,11 +127,64 @@ function Navbar({
           </button>
         </Link>
 
-        {isLoggedIn ? (
+        {user ? (
           <div className="user-section">
-            <div className="user-name">
-              <FaUser />
-              <span>{userName}</span>
+            <div
+              className="profile-menu"
+              ref={profileRef}
+            >
+              <button
+                type="button"
+                className="user-name"
+                onClick={() =>
+                  setIsProfileOpen(
+                    (previousState) =>
+                      !previousState
+                  )
+                }
+                aria-expanded={isProfileOpen}
+                aria-label="Open account menu"
+              >
+                <FaUser />
+
+                <span>{userName}</span>
+
+                <FaChevronDown
+                  className={`profile-arrow ${
+                    isProfileOpen
+                      ? "profile-arrow-open"
+                      : ""
+                  }`}
+                />
+              </button>
+
+              {isProfileOpen && (
+                <div className="profile-dropdown">
+                  <Link
+                    to="/profile"
+                    className="profile-dropdown-item"
+                    onClick={() =>
+                      setIsProfileOpen(false)
+                    }
+                  >
+                    <FaAddressCard />
+
+                    <span>My Profile</span>
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    className="profile-dropdown-item"
+                    onClick={() =>
+                      setIsProfileOpen(false)
+                    }
+                  >
+                    <FaBoxOpen />
+
+                    <span>My Orders</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             <button
@@ -83,6 +198,7 @@ function Navbar({
           <Link to="/login">
             <button className="login-btn">
               <FaUser />
+
               <span>Login</span>
             </button>
           </Link>

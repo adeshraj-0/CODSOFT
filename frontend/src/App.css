@@ -102,10 +102,13 @@ body{
 }
 
 .nav-right{
-
     display:flex;
-
+    align-items:center;
     gap:15px;
+}
+
+.nav-right a{
+    text-decoration:none;
 }
 
 .cart-btn{
@@ -1658,4 +1661,125 @@ margin-top:30px;
 .logout-btn:hover{
     transform:translateY(-2px);
     box-shadow:0 5px 15px rgba(255,65,108,.4);
+}
+
+/* ================= PROFILE DROPDOWN ================= */
+
+.profile-menu {
+    position: relative;
+}
+
+.profile-menu .user-name {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    margin: 0;
+    transition: .25s;
+}
+
+.profile-menu .user-name:hover {
+    background: #293a60;
+}
+
+.profile-menu .user-name:focus {
+    outline: none;
+}
+
+.profile-arrow {
+    font-size: 12px;
+    margin-left: 2px;
+    transition: transform .25s ease;
+}
+
+.profile-arrow-open {
+    transform: rotate(180deg);
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+
+    width: 190px;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 8px;
+
+    background: #ffffff;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+
+    box-shadow: 0 15px 35px rgba(0, 0, 0, .22);
+
+    z-index: 2000;
+}
+
+.profile-dropdown::before {
+    content: "";
+
+    position: absolute;
+
+    top: -6px;
+    right: 28px;
+
+    width: 12px;
+    height: 12px;
+
+    background: #ffffff;
+
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+
+    transform: rotate(45deg);
+}
+
+.nav-right .profile-dropdown-item {
+    position: relative;
+    z-index: 1;
+
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px 14px;
+
+    color: #1f2937;
+    text-decoration: none;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    transition: .2s;
+}
+
+.nav-right .profile-dropdown-item svg {
+    color: #2563eb;
+    font-size: 17px;
+}
+
+.nav-right .profile-dropdown-item:hover {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+@media(max-width:1024px) {
+
+    .profile-dropdown {
+        right: 50%;
+        transform: translateX(50%);
+    }
+
+    .profile-dropdown::before {
+        right: 50%;
+        margin-right: -6px;
+    }
+
 }
